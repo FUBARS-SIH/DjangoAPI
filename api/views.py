@@ -3,30 +3,27 @@ from django.http import JsonResponse
 
 from .serializers import ReportSerializer
 from rest_framework import status
-from .models import Report
+from .models import Report, School
 import json
 from django.core.exceptions import ObjectDoesNotExist
 
 @api_view(["GET"])
-
 def get_reports(request):
-    school = request.school.id
-    reports = Report.objects.filter(added_by=school)
+    school_id = request.school.id
+    reports = Report.objects.filter(School.objects.get(id=school_id))
     #reports = Report.objects
     serializer = ReportSerializer(reports, many=True)
     return JsonResponse({'reports': serializer.data}, safe=False, status=status.HTTP_200_OK)
 
 @api_view(["POST"])
-
 def add_report(request):
     payload = json.loads(request.body)
     try:
-        school = School.objects.get(id=payload["school"])
+        school = School.objects.get(id=payload["school_id"])
         report = Report.objects.create(
             reported_student_count=payload["student_count"],
             reported_menu=payload["menu"],
             reported_for_date=payload["for_date"],
-            reported_on_datetime=payload["on_datetime"],
             school=school
         )
         serializer = ReportSerializer(report)
@@ -37,16 +34,12 @@ def add_report(request):
         return JsonResponse({'error': 'Something terrible went wrong'}, safe=False, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(["PUT"])
-
 def update_report(request, report_id):
-    school = request.school.id
     payload = json.loads(request.body)
     try:
-        report_item = Report.objects.filter(added_by=school, id=report_id)
-        # returns 1 or 0
+        report_item = Report.objects.filter(id=report_id)
         report_item.update(**payload)
-        report = Report.objects.get(id=report_id)
-        serializer = ReportSerializer(report)
+        serializer = ReportSerializer(report_item)
         return JsonResponse({'report': serializer.data}, safe=False, status=status.HTTP_200_OK)
     except ObjectDoesNotExist as e:
         return JsonResponse({'error': str(e)}, safe=False, status=status.HTTP_404_NOT_FOUND)
