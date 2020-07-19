@@ -1,9 +1,14 @@
 from rest_framework.decorators import api_view
 from django.http import JsonResponse
 
-from .serializers import ReportSerializer
+from rest_framework.permissions import BasePermission, IsAuthenticated, IsAuthenticatedOrReadOnly, SAFE_METHODS
+from rest_framework.response import Response
+from rest_framework import generics
+from .permissions import IsOwnerOrReadOnly
+from .serializers import ReportSerializer, AuthoritySerializer, SchoolSerializer
+from .models import Report, School, Authority
+
 from rest_framework import status
-from .models import Report, School
 import json
 from django.core.exceptions import ObjectDoesNotExist
 
@@ -45,3 +50,32 @@ def update_report(request, report_id):
         return JsonResponse({'error': str(e)}, safe=False, status=status.HTTP_404_NOT_FOUND)
     except Exception:
         return JsonResponse({'error': 'Something terrible went wrong'}, safe=False, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class AuthorityEnroll(generics.CreateAPIView):
+    queryset = Authority.objects.all()
+    serializer_class = AuthoritySerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        user.is_authority = True
+        user.save()
+        return serializer.save(user=user)
+
+class SchoolEnroll(generics.CreateAPIView):
+    queryset = School.objects.all()
+    serializer_class = SchoolSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        return serializer.save(user=self.request.user)
+
+class AuthorityRetrieveUpdate(generics.RetrieveUpdateAPIView):
+    queryset = Authority.objects.all()
+    serializer_class = AuthoritySerializer
+    permission_classes = [IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+
+class SchoolRetrieveUpdate(generics.RetrieveUpdateAPIView):
+    queryset = School.objects.all()
+    serializer_class = SchoolSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
