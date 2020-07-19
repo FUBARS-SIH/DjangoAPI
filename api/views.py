@@ -79,3 +79,18 @@ class SchoolRetrieveUpdate(generics.RetrieveUpdateAPIView):
     queryset = School.objects.all()
     serializer_class = SchoolSerializer
     permission_classes = [IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+
+class ReportCreate(generics.CreateAPIView):
+    queryset = Report.objects.all()
+    serializer_class = ReportSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        user_id = self.request.id
+        school = School.objects.filter(id = user_id) #should retive by id ther might be users with similar name
+        return serializer.save(school=school)
+
+class ReportRetrieveUpdate(generics.RetrieveUpdateAPIView):
+    queryset = Report.objects.all()
+    serializer_class = ReportSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
