@@ -20,4 +20,5 @@ from django.conf.urls import url, include
 urlpatterns = [
     url(r'^api/', include('djoser.urls')),
     path('admin/', admin.site.urls),
+    path('api/', include('api.urls')),
 ]
