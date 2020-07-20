@@ -18,12 +18,16 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
 class IsSchoolOwner(permissions.BasePermission):
     """
     Custom permission to check if the object belongs to the 
-    logged in user's school.
+    logged in user's school or school is under logged in 
+    authority.
     """
 
     def has_object_permission(self, request, view, obj):
         try:
             school = School.objects.get(user=request.user)
-            return obj.school == school
-        except Exception:
+            return obj.school == school  
+        except School.DoesNotExist:
+            authority = Authority.objects.get(user=request.user)
+            return authority.school_set.filter(school=obj.school).exists()
+        except Exception as e:
             return False

@@ -22,6 +22,11 @@ class ReportSerializer(serializers.ModelSerializer):
             'reported_for_date',
         ]
 
+class FullReportSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Report
+        fields = '__all__'
+
 class AuthoritySerializer(serializers.ModelSerializer):
     class Meta:
         model = Authority

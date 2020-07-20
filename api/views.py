@@ -49,3 +49,23 @@ class ReportRetrieveUpdate(generics.RetrieveUpdateAPIView):
     queryset = Report.objects.all()
     serializer_class = ReportSerializer
     permission_classes = [IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+
+class SchoolReportList(generics.ListAPIView):
+    """
+    Lists all the reports created by a school.
+    Request has to be initiated by the owner school.
+    """
+    queryset = Report.objects.filter(school__user=request.user)
+    serializer_class = ReportSerializer
+    permission_classes = [IsAuthenticated, IsSchoolOwner]
+
+class AuthorityReportList(generics.ListAPIView):
+    """
+    Lists all the reports created by schools under the authority.
+    Request has to be initiated by the authority.
+    """
+    authority = Authority.objects.get(user=request.user)
+    schools = authority.school_set.all()
+    queryset = Report.objects.fitler(school__in=schools)
+    serializer_class = FullReportSerializer
+    permission_classes = [IsAuthenticated, IsSchoolOwner]

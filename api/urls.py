@@ -8,4 +8,6 @@ urlpatterns = [
   path('school/<int:pk>', views.SchoolRetrieveUpdate.as_view()),
   path('report/', views.ReportCreate.as_view()),
   path('report/<int:pk>', views.ReportRetrieveUpdate.as_view()),
+  path('authority/reports/', views.AuthorityReportList.as_view()),
+  path('school/reports/', views.SchoolReportList.as_view()),
 ]
