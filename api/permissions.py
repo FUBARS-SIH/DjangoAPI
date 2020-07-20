@@ -1,4 +1,5 @@
 from rest_framework import permissions
+from .models import School
 
 class IsOwnerOrReadOnly(permissions.BasePermission):
     """
@@ -14,4 +15,15 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
         # Write permissions are only allowed to the owner of the object
         return obj.user == request.user
 
-    
+class IsSchoolOwner(permissions.BasePermission):
+    """
+    Custom permission to check if the object belongs to the 
+    logged in user's school.
+    """
+
+    def has_object_permission(self, request, view, obj):
+        try:
+            school = School.objects.get(user=request.user)
+            return obj.school == school
+        except Exception:
+            return False
