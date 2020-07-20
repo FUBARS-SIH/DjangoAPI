@@ -1,5 +1,6 @@
 from rest_framework.permissions import BasePermission, IsAuthenticated, IsAuthenticatedOrReadOnly, SAFE_METHODS
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework import generics
 from .permissions import IsOwnerOrReadOnly, IsSchoolOwner
 from .serializers import ReportSerializer, AuthoritySerializer, SchoolSerializer
