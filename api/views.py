@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import generics
 from .permissions import IsOwnerOrReadOnly, IsSchoolOwner, IsOwner
-from .serializers import ReportSerializer, AuthoritySerializer, SchoolSerializer
+from .serializers import ReportSerializer, AuthoritySerializer, SchoolSerializer, FullReportSerializer
 from .models import Report, School, Authority
 
 class MeRetrieveUpdate(generics.RetrieveUpdateAPIView):
