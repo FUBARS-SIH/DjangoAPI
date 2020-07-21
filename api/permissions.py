@@ -15,6 +15,14 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
         # Write permissions are only allowed to the owner of the object
         return obj.user == request.user
 
+class IsOwner(permissions.BasePermission):
+    """
+    Custom permission to only allow owners of an object to access it.
+    """
+
+    def has_object_permission(self, request, view, obj):
+        return obj.user == request.user
+
 class IsSchoolOwner(permissions.BasePermission):
     """
     Custom permission to check if the object belongs to the 

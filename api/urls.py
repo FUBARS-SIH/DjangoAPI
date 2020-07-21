@@ -3,11 +3,10 @@ from . import views
 
 urlpatterns = [
   path('authority/', views.AuthorityEnroll.as_view()),
-  path('authority/<int:pk>', views.AuthorityRetrieveUpdate.as_view()),
+  path('authority/me/', views.AuthorityMeRetrieveUpdate.as_view()),
+  path('authority/me/report/', views.AuthorityReportList.as_view()),
   path('school/', views.SchoolEnroll.as_view()),
-  path('school/<int:pk>', views.SchoolRetrieveUpdate.as_view()),
-  path('report/', views.ReportCreate.as_view()),
-  path('report/<int:pk>', views.ReportRetrieveUpdate.as_view()),
-  path('authority/reports/', views.AuthorityReportList.as_view()),
-  path('school/reports/', views.SchoolReportList.as_view()),
+  path('school/me/', views.SchoolMeRetrieveUpdate.as_view()),
+  path('school/me/report/', views.SchoolReportListCreate.as_view()),
+  path('school/me/report/<int:pk>', views.SchoolReportRetrieveUpdate.as_view()),
 ]
