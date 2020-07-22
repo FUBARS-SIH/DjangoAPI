@@ -104,10 +104,27 @@ class AuthorityTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_authority_update_with_auth(self):
-        pass
+        url = reverse('authority_me_retrieve_update')
+
+        self.api_authenticate()
+        authority = self.create_authority_with_current_user()
+
+        new_district = District.objects.create(name="ABC")
+        data = {"district" : new_district.id}
+
+        response = self.client.put(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        authority = Authority.objects.get(user_id=authority.user_id)
+        authority_serializer_data = AuthoritySerializer(authority).data
+        response_data = json.loads(response.content)
+        self.assertEqual(response_data, authority_serializer_data)
 
     def test_authority_update_without_auth(self):
-        pass
+        url = reverse('authority_me_retrieve_update')
+
+        response = self.client.put(url)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_authority_report_list_with_auth(self):
         url = reverse('authority_report_list')
@@ -210,10 +227,27 @@ class SchoolTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_school_update_with_auth(self):
-        pass
+        url = reverse('school_me_retrieve_update')
+
+        self.api_authenticate()
+        school = self.create_school_with_current_user()
+
+        new_district = District.objects.create(name="ABC")
+        data = {'name': 'School B', "district" : new_district.id}
+
+        response = self.client.put(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        school = School.objects.get(user_id=school.user_id)
+        school_serializer_data = SchoolSerializer(school).data
+        response_data = json.loads(response.content)
+        self.assertEqual(response_data, school_serializer_data)
 
     def test_school_update_without_auth(self):
-        pass
+        url = reverse('school_me_retrieve_update')
+
+        response = self.client.put(url)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_school_report_create_with_auth(self):
         url = reverse('school_report_list_create')
@@ -268,14 +302,87 @@ class SchoolTests(APITestCase):
         response_data = json.loads(response.content)
         self.assertEqual(response_data, report_serializer_data)
 
+    def test_school_report_list_without_auth(self):
+        url = reverse('school_report_list_create')
+
+        response = self.client.put(url)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
     def test_school_report_retrieve_with_auth(self):
-        pass
+        self.api_authenticate()
+        school = self.create_school_with_current_user()
+        report = Report.objects.create(
+                school=school,
+                reported_student_count=45,
+                reported_for_date=date.today(),
+                reported_menu={}
+            )
+
+        url = reverse('school_report_retrieve_update', kwargs={"pk": report.pk})
+ 
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+   
+        report_serializer_data = ReportSerializer(report).data
+        response_data = json.loads(response.content)
+        self.assertEqual(response_data, report_serializer_data)
 
     def test_school_report_retrieve_without_auth(self):
-        pass
+        self.api_authenticate()
+        school = self.create_school_with_current_user()
+        report = Report.objects.create(
+                school=school,
+                reported_student_count=45,
+                reported_for_date=date.today(),
+                reported_menu={}
+            )
+        
+        url = reverse('school_report_retrieve_update', kwargs={"pk": report.pk})
+
+        self.client.credentials() 
+
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_school_report_update_with_auth(self):
-        pass
+        self.api_authenticate()
+        school = self.create_school_with_current_user()
+        report = Report.objects.create(
+                school=school,
+                reported_student_count=45,
+                reported_for_date=date.today(),
+                reported_menu={}
+            )
+        
+        data = {
+            'reported_student_count': 40,
+            'reported_for_date': '2020-01-10',
+            'reported_menu': "vadapav"
+        }
+
+        url = reverse('school_report_retrieve_update', kwargs={"pk": report.pk})
+ 
+        response = self.client.put(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        report = Report.objects.get(id=report.id)
+        report_serializer_data = ReportSerializer(report).data
+        response_data = json.loads(response.content)
+        self.assertEqual(response_data, report_serializer_data)
 
     def test_school_report_update_without_auth(self):
-        pass
+        self.api_authenticate()
+        school = self.create_school_with_current_user()
+        report = Report.objects.create(
+                school=school,
+                reported_student_count=45,
+                reported_for_date=date.today(),
+                reported_menu={}
+            )
+        
+        url = reverse('school_report_retrieve_update', kwargs={"pk": report.pk})
+
+        self.client.credentials()        
+
+        response = self.client.put(url)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
