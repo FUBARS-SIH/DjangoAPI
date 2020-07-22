@@ -3,8 +3,10 @@ from django.contrib.auth.models import AbstractUser
 from .managers import CustomUserManager
 from django.db.models.functions import Now
 from django.contrib.postgres.fields import JSONField
+from django.core.validators import validate_email
 
 class CustomUser(AbstractUser):
+    email = models.EmailField(blank=False, unique=True, validators=[validate_email])
     is_authority = models.BooleanField(default=False)
 
     objects = CustomUserManager()

@@ -42,7 +42,7 @@ class CustomUserTest(TestCase):
             )
 
     def test_custom_user_creation_with_invalid_email(self):
-        with self.assertRaisesMessage(ValidationError, 'Enter a valid email address'):
+        with self.assertRaises(ValidationError):
             custom_user = CustomUser.objects.create_user(
                 username=self.username,
                 email=self.invalid_email,
