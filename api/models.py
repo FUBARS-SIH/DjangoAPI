@@ -41,5 +41,5 @@ class Report(models.Model):
     reported_for_date = models.DateField('date reported for', blank=False)
     reported_on_datetime = models.DateTimeField('date and time reported on', auto_now_add=True)
 
-    estimated_student_count = models.PositiveIntegerField()
-    estimated_menu = JSONField()
+    estimated_student_count = models.PositiveIntegerField(null=True, default=0)
+    estimated_menu = JSONField(null=True, default=dict)

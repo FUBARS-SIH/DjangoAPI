@@ -91,7 +91,7 @@ class SchoolReportListCreate(generics.ListCreateAPIView):
 
     def list(self, request):
         queryset = self.get_queryset()
-        serializer = UserSerializer(queryset.filter(school__user=request.user), many=True)
+        serializer = ReportSerializer(queryset.filter(school__user=request.user), many=True)
         return Response(serializer.data)
 
     def perform_create(self, serializer):
