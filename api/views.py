@@ -2,6 +2,9 @@ from rest_framework.permissions import BasePermission, IsAuthenticated, IsAuthen
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import generics
+from django.shortcuts import get_object_or_404
+from django.core.exceptions import ValidationError
+from django.http import Http404
 from .permissions import IsOwnerOrReadOnly, IsSchoolOwner, IsOwner
 from .serializers import ReportSerializer, AuthoritySerializer, SchoolSerializer, FullReportSerializer
 from .models import Report, School, Authority
@@ -17,11 +20,12 @@ class MeRetrieveUpdate(generics.RetrieveUpdateAPIView):
         Returns the object of the current logged in user.
         """
         queryset = self.filter_queryset(self.get_queryset())
-        obj = get_object_or_404(queryset, user=self.request.user)
-
-        self.check_object_permissions(self.request, obj)
-
-        return obj
+        try:
+            obj = get_object_or_404(queryset, user=self.request.user)
+            self.check_object_permissions(self.request, obj)
+            return obj
+        except (TypeError, ValueError, ValidationError):
+            raise Http404
 
 class AuthorityEnroll(generics.CreateAPIView):
     queryset = Authority.objects.all()
