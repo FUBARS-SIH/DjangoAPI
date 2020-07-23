@@ -135,14 +135,13 @@ class AuthorityTests(APITestCase):
         all_reports = []
         for school in schools:
             all_reports.extend(self.create_reports_with_school(school, 2))
-
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         full_report_serializer_data = FullReportSerializer(
             all_reports, many=True).data
         response_data = json.loads(response.content)
-        self.assertEqual(response_data, full_report_serializer_data)
+        self.assertCountEqual(response_data, full_report_serializer_data)
 
     def test_authority_report_list_without_auth(self):
         url = reverse('authority_report_list')

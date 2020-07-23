@@ -1,5 +1,6 @@
 from django.contrib.auth.base_user import BaseUserManager
 from django.utils.translation import ugettext as _
+from email_validator import validate_email, EmailNotValidError
 
 class CustomUserManager(BaseUserManager):
     """
@@ -18,6 +19,11 @@ class CustomUserManager(BaseUserManager):
         if not password:
             raise ValueError(_('The password must be set'))
         email = self.normalize_email(email)
+        try:
+            valid = validate_email(email)
+            email = valid.email
+        except EmailNotValidError:
+            raise EmailNotValidError(_('The email address is not valid'))
         user = self.model(username=username, email=email, **extra_fields)
         user.set_password(password)
         user.save()

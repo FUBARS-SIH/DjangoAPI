@@ -2,6 +2,7 @@ from django.test import TestCase
 from django.db import IntegrityError
 from django.core.exceptions import ValidationError
 from api.models import CustomUser
+from email_validator import EmailNotValidError
 
 
 class CustomUserTest(TestCase):
@@ -42,7 +43,7 @@ class CustomUserTest(TestCase):
             )
 
     def test_custom_user_creation_with_invalid_email(self):
-        with self.assertRaises(ValidationError):
+        with self.assertRaisesMessage(EmailNotValidError, 'The email address is not valid'):
             custom_user = CustomUser.objects.create_user(
                 username=self.username,
                 email=self.invalid_email,
