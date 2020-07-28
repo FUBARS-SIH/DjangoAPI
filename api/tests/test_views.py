@@ -5,7 +5,7 @@ from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APITestCase
 from api.models import CustomUser, Authority, Report, District, School
-from api.serializers import AuthoritySerializer, FullReportSerializer, SchoolSerializer, ReportSerializer
+from api.serializers import AuthoritySerializer, FullReportSerializer, SchoolSerializer, ReportSerializer, DistrictSerializer
 
 
 class AuthorityTests(APITestCase):
@@ -385,3 +385,20 @@ class SchoolTests(APITestCase):
 
         response = self.client.put(url)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+class DistrictTests(APITestCase):
+
+    def setUp(self):
+        self.districts = []
+        for i in range(3):
+            self.districts.append(District.objects.create(name='District{}'.format(i+1)))
+    
+    def test_district_list(self):
+        url = reverse('district_list')
+
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        district_serializer_data = DistrictSerializer(self.districts, many=True).data
+        response_data = json.loads(response.content)
+        self.assertEqual(response_data, district_serializer_data)

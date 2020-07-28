@@ -6,8 +6,8 @@ from django.shortcuts import get_object_or_404
 from django.core.exceptions import ValidationError
 from django.http import Http404
 from .permissions import IsOwnerOrReadOnly, IsSchoolOwner, IsOwner
-from .serializers import ReportSerializer, AuthoritySerializer, SchoolSerializer, FullReportSerializer
-from .models import Report, School, Authority
+from .serializers import ReportSerializer, AuthoritySerializer, SchoolSerializer, FullReportSerializer, DistrictSerializer
+from .models import Report, School, Authority, District
 
 class MeRetrieveUpdate(generics.RetrieveUpdateAPIView):
     """
@@ -107,3 +107,10 @@ class SchoolReportRetrieveUpdate(generics.RetrieveUpdateAPIView):
     queryset = Report.objects.all()
     serializer_class = ReportSerializer
     permission_classes = [IsAuthenticated, IsSchoolOwner]
+
+class DistrictList(generics.ListAPIView):
+    """
+    List all the districts.
+    """
+    queryset = District.objects.all()
+    serializer_class = DistrictSerializer

@@ -31,6 +31,7 @@ class AuthoritySerializer(serializers.ModelSerializer):
     class Meta:
         model = Authority
         fields = [
+            'user_id',
             'district',
         ]
 
@@ -38,6 +39,7 @@ class SchoolSerializer(serializers.ModelSerializer):
     class Meta:
         model = School
         fields = [
+            'user_id',
             'name',
             'district',
         ]
@@ -50,3 +52,9 @@ class SchoolSerializer(serializers.ModelSerializer):
             return School.objects.create(**validated_data)
         except Exception as e:
             pass
+
+class DistrictSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = District
+        fields = '__all__'
+        
