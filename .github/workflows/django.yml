@@ -16,17 +16,23 @@ jobs:
         python-version: [3.6, 3.7, 3.8]
 
     steps:
+    - name: Setup PostgreSQL
+      uses: Harmon758/postgresql-action@v1.0.0
+      with:
+        postgres version: 12
+        postgresql db: mdm
+        postgresql user: mdm_user
+        postgresql password: InchOwiL
     - uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v1
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Pipenv for Github Actions
-      uses: VaultVulp/action-pipenv@v2.0.1
+    - name: Install pipenv
+      uses: dschep/install-pipenv-action@v1
     - name: Install Dependencies
       run: |
-        python -m pip install --upgrade pip
-        pipenv install
+        pipenv --python ${{ matrix.python-version }} install --dev
     - name: Run Tests
       run: |
-        python manage.py test
+        pipenv run python manage.py test
