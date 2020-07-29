@@ -1,6 +1,7 @@
 from djoser.serializers import UserCreateSerializer
 from rest_framework import serializers
-from .models import CustomUser, Authority, School, Report, District
+from .models import CustomUser, Authority, School, Report, District, ReportItem
+from django.db import transaction
 
 class CustomUserCreateSerializer(UserCreateSerializer):
     class Meta(UserCreateSerializer.Meta):
@@ -12,15 +13,44 @@ class CustomUserCreateSerializer(UserCreateSerializer):
             'is_authority',
         ]
 
-class ReportSerializer(serializers.ModelSerializer):
+class ReportItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ReportItem
+        fields = [
+            'item',
+        ]
+
+class SchoolReportSerializer(serializers.ModelSerializer):
+    items = ReportItemSerializer(many=True)
+    
     class Meta:
         model = Report
         fields = [
             'id',
-            'reported_student_count',
-            'reported_menu',
-            'reported_for_date',
+            'student_count',
+            'for_date',
+            'items'
         ]
+
+    @transaction.atomic
+    def create(self, validated_data):
+        items_data = validated_data.pop('items')
+        report = Report.objects.create(**validated_data)
+        for item_data in items_data:
+            ReportItem.objects.create(report=report, **item_data)        
+        return report
+
+    @transaction.atomic
+    def update(self, instance, validated_data):
+        items_data = validated_data.pop('items')
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        if items_data:
+            instance.items.all().delete()
+            for item_data in items_data:
+                ReportItem.objects.create(report=instance, **item_data)        
+        instance.save()
+        return instance
 
 class FullReportSerializer(serializers.ModelSerializer):
     class Meta:

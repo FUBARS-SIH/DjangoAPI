@@ -4,8 +4,8 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APITestCase
-from api.models import CustomUser, Authority, Report, District, School
-from api.serializers import AuthoritySerializer, FullReportSerializer, SchoolSerializer, ReportSerializer, DistrictSerializer
+from api.models import CustomUser, Authority, Report, District, School, ReportItem
+from api.serializers import AuthoritySerializer, FullReportSerializer, SchoolSerializer, SchoolReportSerializer, DistrictSerializer
 
 
 class AuthorityTests(APITestCase):
@@ -15,7 +15,7 @@ class AuthorityTests(APITestCase):
 
         self.user = CustomUser.objects.create_user(
             username='user1',
-            email='user1@example.com',
+            email='user1@gmail.com',
             password='Ltye$4T5'
         )
 
@@ -36,7 +36,7 @@ class AuthorityTests(APITestCase):
         for i in range(num_schools):
             school_user = CustomUser.objects.create_user(
                 username='schooluser{}'.format(i + 1),
-                email='su{}@example.com'.format(i + 1),
+                email='su{}@gmail.com'.format(i + 1),
                 password='Tv#jlI2O*F'
             )
             school = School.objects.create(
@@ -53,12 +53,11 @@ class AuthorityTests(APITestCase):
         for i in range(num_reports):
             report = Report.objects.create(
                 school=school,
-                reported_student_count=45,
-                reported_for_date=(date.today() - timedelta(i)),
-                reported_menu={},
-                estimated_student_count=50,
-                estimated_menu={}
+                student_count=45,
+                for_date=(date.today() - timedelta(i)),
             )
+            items=['idly', 'dosa', 'chutney']
+            report.items.bulk_create([ReportItem(report=report, item=item) for item in items])
             reports.append(report)
         return reports
 
@@ -156,7 +155,7 @@ class SchoolTests(APITestCase):
         self.district = District.objects.create(name='XYZ')
         self.user = CustomUser.objects.create_user(
             username='user1',
-            email='user1@example.com',
+            email='user1@gmail.com',
             password='Ltye$4T5'
         )
         self.token = Token.objects.create(user=self.user)
@@ -169,10 +168,11 @@ class SchoolTests(APITestCase):
         for i in range(num_reports):
             report = Report.objects.create(
                 school=school,
-                reported_student_count=45,
-                reported_for_date=(date.today() - timedelta(i)),
-                reported_menu={}
+                student_count=45,
+                for_date=(date.today() - timedelta(i)),
             )
+            items = ['idly', 'dosa']
+            report.items.bulk_create([ReportItem(report=report, item=item) for item in items])
             reports.append(report)
         return reports
 
@@ -251,36 +251,38 @@ class SchoolTests(APITestCase):
     def test_school_report_create_with_auth(self):
         url = reverse('school_report_list_create')
         data = {
-            'reported_student_count': 45,
-            'reported_menu': {
-                'item1': '1',
-                'item2': '2 servings'
-            },
-            'reported_for_date': '2020-01-10'
+            'student_count': 45,
+            'for_date': '2020-01-10',
+            'items': [
+                {'item': 'idly'},
+                {'item': 'dosa'}
+            ]
         }
 
         self.api_authenticate()
         school = self.create_school_with_current_user()
-
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Report.objects.count(), 1)
         report = Report.objects.get()
         self.assertEqual(report.school, school)
-        self.assertEqual(report.reported_student_count,
-                         data['reported_student_count'])
-        self.assertEqual(report.reported_menu, data['reported_menu'])
-        self.assertEqual(report.reported_for_date, date(2020, 1, 10))
+        self.assertEqual(report.student_count,
+                         data['student_count'])
+        for i, item in enumerate(report.items.all()):
+            self.assertEqual(item.report.id, report.id)
+            self.assertEqual(item.item, data['items'][i]['item'])
+        # self.assertEqual(report.items.all(), data['items'])
+        self.assertEqual(report.for_date, date(2020, 1, 10))
 
     def test_school_report_create_without_auth(self):
         url = reverse('school_report_list_create')
         data = {
-            'reported_student_count': 45,
-            'reported_menu': {
-                'item1': '1',
-                'item2': '2 servings'
-            },
-            'reported_for_date': '2020-01-10'
+            'student_count': 45,
+            'for_date': '2020-01-10',
+            'items': [
+                {'item': 'idly'},
+                {'item': 'dosa'}
+            ]
         }
 
         response = self.client.post(url, data, format='json')
@@ -297,7 +299,7 @@ class SchoolTests(APITestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        report_serializer_data = ReportSerializer(reports, many=True).data
+        report_serializer_data = SchoolReportSerializer(reports, many=True).data
         response_data = json.loads(response.content)
         self.assertEqual(response_data, report_serializer_data)
 
@@ -312,17 +314,18 @@ class SchoolTests(APITestCase):
         school = self.create_school_with_current_user()
         report = Report.objects.create(
                 school=school,
-                reported_student_count=45,
-                reported_for_date=date.today(),
-                reported_menu={}
+                student_count=45,
+                for_date=(date.today()),
             )
+        items=['idly', 'dosa', 'chutney']
+        report.items.bulk_create([ReportItem(report=report, item=item) for item in items])
 
         url = reverse('school_report_retrieve_update', kwargs={"pk": report.pk})
  
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
    
-        report_serializer_data = ReportSerializer(report).data
+        report_serializer_data = SchoolReportSerializer(report).data
         response_data = json.loads(response.content)
         self.assertEqual(response_data, report_serializer_data)
 
@@ -331,10 +334,11 @@ class SchoolTests(APITestCase):
         school = self.create_school_with_current_user()
         report = Report.objects.create(
                 school=school,
-                reported_student_count=45,
-                reported_for_date=date.today(),
-                reported_menu={}
+                student_count=45,
+                for_date=(date.today()),
             )
+        items=['idly', 'dosa', 'chutney']
+        report.items.bulk_create([ReportItem(report=report, item=item) for item in items])
         
         url = reverse('school_report_retrieve_update', kwargs={"pk": report.pk})
 
@@ -348,15 +352,19 @@ class SchoolTests(APITestCase):
         school = self.create_school_with_current_user()
         report = Report.objects.create(
                 school=school,
-                reported_student_count=45,
-                reported_for_date=date.today(),
-                reported_menu={}
+                student_count=45,
+                for_date=(date(2020, 1, 10)),
             )
+        items=['idly', 'dosa', 'chutney']
+        report.items.bulk_create([ReportItem(report=report, item=item) for item in items])
         
         data = {
-            'reported_student_count': 40,
-            'reported_for_date': '2020-01-10',
-            'reported_menu': "vadapav"
+            'student_count': 45,
+            'for_date': '2020-01-10',
+            'items': [
+                {'item': 'idly'},
+                {'item': 'dosa'}
+            ]
         }
 
         url = reverse('school_report_retrieve_update', kwargs={"pk": report.pk})
@@ -365,7 +373,7 @@ class SchoolTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         report = Report.objects.get(id=report.id)
-        report_serializer_data = ReportSerializer(report).data
+        report_serializer_data = SchoolReportSerializer(report).data
         response_data = json.loads(response.content)
         self.assertEqual(response_data, report_serializer_data)
 
@@ -374,10 +382,11 @@ class SchoolTests(APITestCase):
         school = self.create_school_with_current_user()
         report = Report.objects.create(
                 school=school,
-                reported_student_count=45,
-                reported_for_date=date.today(),
-                reported_menu={}
+                student_count=45,
+                for_date=(date(2020, 1, 10)),
             )
+        items=['idly', 'dosa', 'chutney']
+        report.items.bulk_create([ReportItem(report=report, item=item) for item in items])
         
         url = reverse('school_report_retrieve_update', kwargs={"pk": report.pk})
 

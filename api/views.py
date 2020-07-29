@@ -6,7 +6,7 @@ from django.shortcuts import get_object_or_404
 from django.core.exceptions import ValidationError
 from django.http import Http404
 from .permissions import IsOwnerOrReadOnly, IsSchoolOwner, IsOwner
-from .serializers import ReportSerializer, AuthoritySerializer, SchoolSerializer, FullReportSerializer, DistrictSerializer
+from .serializers import SchoolReportSerializer, AuthoritySerializer, SchoolSerializer, FullReportSerializer, DistrictSerializer
 from .models import Report, School, Authority, District
 
 class MeRetrieveUpdate(generics.RetrieveUpdateAPIView):
@@ -86,12 +86,12 @@ class SchoolReportListCreate(generics.ListCreateAPIView):
     Request has to be initiated by the owner school.
     """
     queryset = Report.objects.all()
-    serializer_class = ReportSerializer
+    serializer_class = SchoolReportSerializer
     permission_classes = [IsAuthenticated, IsSchoolOwner]
 
     def list(self, request):
         queryset = self.get_queryset()
-        serializer = ReportSerializer(queryset.filter(school__user=request.user), many=True)
+        serializer = SchoolReportSerializer(queryset.filter(school__user=request.user), many=True)
         return Response(serializer.data)
 
     def perform_create(self, serializer):
@@ -105,7 +105,7 @@ class SchoolReportRetrieveUpdate(generics.RetrieveUpdateAPIView):
     logged in school.
     """
     queryset = Report.objects.all()
-    serializer_class = ReportSerializer
+    serializer_class = SchoolReportSerializer
     permission_classes = [IsAuthenticated, IsSchoolOwner]
 
 class DistrictList(generics.ListAPIView):

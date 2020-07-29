@@ -33,12 +33,25 @@ class School(models.Model):
         return '{} - {}'.format(self.user.username, self.name)
 
 class Report(models.Model):
-    school = models.ForeignKey(School, on_delete=models.CASCADE, unique_for_date="reported_for_date")
+    school = models.ForeignKey(School, on_delete=models.CASCADE)
+    student_count = models.PositiveIntegerField(blank=False)
+    for_date = models.DateField('date reported for', blank=False)
+    on_datetime = models.DateTimeField('date and time reported on', auto_now_add=True)
+    added_by_school = models.BooleanField(default=False)
 
-    reported_student_count = models.PositiveIntegerField(blank=False)
-    reported_menu = JSONField()
-    reported_for_date = models.DateField('date reported for', blank=False)
-    reported_on_datetime = models.DateTimeField('date and time reported on', auto_now_add=True)
+    def __str__(self):
+        added_by = 'School report' if self.added_by_school else 'Estimate report'
+        return '{} - {} - {}'.format(self.school_id, self.for_date, self.added_by_school)
 
-    estimated_student_count = models.PositiveIntegerField(null=True, default=0)
-    estimated_menu = JSONField(null=True, default=dict)
+    class Meta:
+        unique_together = ('school', 'for_date', 'added_by_school')
+
+class ReportItem(models.Model):
+    report = models.ForeignKey(Report, related_name='items', on_delete=models.CASCADE)
+    item = models.CharField(max_length=200, blank=False, null=False)
+
+    def __str__(self):
+        return '{} - {}'.format(self.report_id, self.item)
+
+    class Meta:
+        unique_together = ('report', 'item')
