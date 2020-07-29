@@ -126,7 +126,7 @@ None
 
 Use this endpoint to enroll the current user as an authority
 
-**URL**: `/authority/`
+**URL**: `/authorities/`
 
 **Method**: `POST`
 
@@ -143,14 +143,47 @@ Use this endpoint to enroll the current user as an authority
 |--|--|
 |`status`|`HTTP_201_CREATED`|
 |`district`|ID of the district the authority belongs to|
+
+## Current authority retrive
+
+Use this endpoint to retrieve the details of the currently logged in authority.
+
+**URL**: `/authorities/me/`
+
+**Method**: `GET`
+
+**_Requires_**: user_id of the current authority 
+
+### Response Parameters
+|Parameter|Description|
+|--|--|
+|`status`|`HTTP_200_OK`|
+|`user_id`|ID of the current authority|
+|`district`|ID of the district the authority belongs to|
+
+## List Reports
+
+Use this endpoint to list the reports under the supervision of the current authority
+
+**URL**: `/authorities/me/reports`
+
+**Method**: `GET`
+
+**_Requires_**: user_id of the current authority 
+
+### Response Parameters
+|Parameter|Description|
+|--|--|
+|`status`|`HTTP_200_OK`|
+|`reports`|Reports of the school which belongs to the current authority|
 
 # School Related Endpoints
 
 ## Enroll school
 
-Use this endpoint to enroll the current user as an authority
+Use this endpoint to enroll the current user as an school
 
-**URL**: `/school/`
+**URL**: `/schools/`
 
 **Method**: `POST`
 
@@ -170,4 +203,109 @@ Use this endpoint to enroll the current user as an authority
 |`name`|Name of the school|
 |`district`|ID of the district the school belongs to|
 
+## Current school retrive
 
+Use this endpoint to retrieve the details of the currently logged in school.
+
+**URL**: `/schools/me/`
+
+**Method**: `GET`
+
+**_Requires_**: user_id of the current school
+
+### Response Parameters
+|Parameter|Description|
+|--|--|
+|`status`|`HTTP_200_OK`|
+|`user_id`|ID of the current school|
+|`name`|Name of the school|
+|`district`|ID of the district the school belongs to|
+
+## List Reports
+
+Use this endpoint to list the reports of the current school
+
+**URL**: `/schools/me/reports`
+
+**Method**: `GET`
+
+**_Requires_**: user_id of the current school 
+
+### Response Parameters
+|Parameter|Description|
+|--|--|
+|`status`|`HTTP_200_OK`|
+|`reports`|Reports of the current school|
+
+## Create Report
+
+Use this endpoint to create a report for current school
+
+**URL**: `/schools/me/reports`
+
+**Method**: `POST`
+
+### Request Parameters
+|Parameter|Description  |
+|--|--|
+|`reported_student_count`|Student attendence|
+|`reported_menu`|ID of the menu which belongs to the current report|
+|`reported_for_date`|Date of the report|
+
+
+### Response Parameters
+|Parameter|Description|
+|--|--|
+|`status`|`HTTP_201_CREATED`|
+|`id`|ID of the current report|
+|`school`|ID of the current school the report belongs to|
+|`reported_student_count`|Student attendence|
+|`reported_menu`|ID of the menu which belongs to the current report|
+|`reported_for_date`|Date of the report|
+
+## Current report retrieve
+
+Use this endpoint to retrieve the details of the current report.
+
+**URL**: `schools/me/reports/<int:pk>`
+
+**Method**: `GET`
+**_Requires_**: Id of the current report
+
+### Response Parameters
+|Parameter|Description|
+|--|--|
+|`status`|`HTTP_200_OK`|
+|`id`|ID of the current report|
+|`school`|ID of the current school the report belongs to|
+|`reported_student_count`|Student attendence|
+|`reported_menu`|ID of the menu which belongs to the current report|
+|`reported_for_date`|Date of the report|
+
+
+## Current report update
+
+Use this endpoint to update the details of the current report.
+
+**URL**: `schools/me/reports/<int:pk>`
+
+**Method**: `PUT` or `PATCH`
+
+**_Requires_**: Id of the current report
+
+### Request Parameters
+|Parameter|Description  |
+|--|--|
+|`reported_student_count`|Attendence of the student to be updated.|
+|`reported_menu`|ID of the menu which belongs to the current report|
+|`reported_for_date`|Date of the report to be updated. Returns a `HTTP_400_BAD_REQUEST` if there is another report with the same date.|
+
+### Response Parameters
+|Parameter|Description|
+|--|--|
+|`status`|`HTTP_201_CREATED`|
+|`id`|ID of the current report|
+|`school`|ID of the current school the report belongs to|
+|`reported_student_count`|Student attendence|
+|`reported_menu`|ID of the menu which belongs to the current report|
+|`reported_for_date`|Date of the report|
