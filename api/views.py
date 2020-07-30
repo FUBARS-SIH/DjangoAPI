@@ -6,8 +6,9 @@ from django.shortcuts import get_object_or_404
 from django.core.exceptions import ValidationError
 from django.http import Http404
 from .permissions import IsOwnerOrReadOnly, IsSchoolOwner, IsOwner
-from .serializers import SchoolReportSerializer, AuthoritySerializer, SchoolSerializer, FullReportSerializer, DistrictSerializer
+from .serializers import SchoolReportSerializer, AuthoritySerializer, SchoolSerializer, DistrictSerializer, AuthorityReportSerializer
 from .models import Report, School, Authority, District
+
 
 class MeRetrieveUpdate(generics.RetrieveUpdateAPIView):
     """
@@ -27,6 +28,7 @@ class MeRetrieveUpdate(generics.RetrieveUpdateAPIView):
         except (TypeError, ValueError, ValidationError):
             raise Http404
 
+
 class AuthorityEnroll(generics.CreateAPIView):
     queryset = Authority.objects.all()
     serializer_class = AuthoritySerializer
@@ -38,6 +40,7 @@ class AuthorityEnroll(generics.CreateAPIView):
         user.save()
         return serializer.save(user=user)
 
+
 class AuthorityMeRetrieveUpdate(MeRetrieveUpdate):
     """
     Retrieve or update the current logged in authority details.
@@ -46,21 +49,49 @@ class AuthorityMeRetrieveUpdate(MeRetrieveUpdate):
     serializer_class = AuthoritySerializer
     permission_classes = [IsAuthenticated, IsOwner]
 
-class AuthorityReportList(generics.ListAPIView):
+
+class AuthorityReportList(APIView):
     """
-    Lists all the reports created by schools under the 
+    Lists all the reports created by schools under the
     currently logged in authority.
     """
-    queryset = Report.objects.all()
-    serializer_class = FullReportSerializer
-    permission_classes = [IsAuthenticated, IsSchoolOwner]
 
-    def list(self, request):
-        queryset = self.get_queryset()
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, format=None):
+        """
+        Return the list of reports under authority.
+        """
         authority = Authority.objects.get(user=request.user)
         schools = authority.school_set.all()
-        serializer = FullReportSerializer(queryset.filter(school__in=schools), many=True)
-        return Response(serializer.data)
+        reports = Report.objects.filter(school__in=schools)
+
+        response_data = []
+
+        for school in schools:
+
+            actual_reports = reports.filter(
+                actual_report__isnull=True, school=school)
+            for actual_report in actual_reports:
+                try:
+                    estimate_report = actual_report.estimate_report
+
+                    serializer = AuthorityReportSerializer(
+                        actual_report=actual_report, estimate_report=estimate_report)
+                    response_data.append(serializer.data)
+
+                except Report.DoesNotExist:
+                    serializer = AuthorityReportSerializer(
+                        actual_report=actual_report)
+                    response_data.append(serializer.data)
+
+                except ValidationError as ve:
+                    print(ve)
+
+                except Exception as e:
+                    print(e)
+
+        return Response(response_data)
 
 
 class SchoolEnroll(generics.CreateAPIView):
@@ -71,6 +102,7 @@ class SchoolEnroll(generics.CreateAPIView):
     def perform_create(self, serializer):
         return serializer.save(user=self.request.user)
 
+
 class SchoolMeRetrieveUpdate(MeRetrieveUpdate):
     """
     Retrieve or update the current logged in school details.
@@ -78,7 +110,8 @@ class SchoolMeRetrieveUpdate(MeRetrieveUpdate):
     queryset = School.objects.all()
     serializer_class = SchoolSerializer
     permission_classes = [IsAuthenticated, IsOwner]
-    
+
+
 class SchoolReportListCreate(generics.ListCreateAPIView):
     """
     Creates new reports by school.
@@ -91,7 +124,8 @@ class SchoolReportListCreate(generics.ListCreateAPIView):
 
     def list(self, request):
         queryset = self.get_queryset()
-        serializer = SchoolReportSerializer(queryset.filter(school__user=request.user), many=True)
+        serializer = SchoolReportSerializer(queryset.filter(
+            school__user=request.user, actual_report__isnull=True), many=True)
         return Response(serializer.data)
 
     def perform_create(self, serializer):
@@ -99,14 +133,16 @@ class SchoolReportListCreate(generics.ListCreateAPIView):
         school = School.objects.get(user=user)
         return serializer.save(school=school)
 
+
 class SchoolReportRetrieveUpdate(generics.RetrieveUpdateAPIView):
     """
     Retrieve or update reports created by currently
     logged in school.
     """
-    queryset = Report.objects.all()
+    queryset = Report.objects.filter(actual_report__isnull=True)
     serializer_class = SchoolReportSerializer
     permission_classes = [IsAuthenticated, IsSchoolOwner]
+
 
 class DistrictList(generics.ListAPIView):
     """
