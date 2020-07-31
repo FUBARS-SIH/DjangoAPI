@@ -6,7 +6,7 @@ from django.shortcuts import get_object_or_404
 from django.core.exceptions import ValidationError
 from django.http import Http404
 from .permissions import IsOwnerOrReadOnly, IsSchoolOwner, IsOwner
-from .serializers import SchoolReportSerializer, AuthoritySerializer, SchoolSerializer, DistrictSerializer, AuthorityReportSerializer
+from .serializers import SchoolReportSerializer, AuthoritySerializer, SchoolSerializer, DistrictSerializer, AuthorityReportSerializer, EstimatedReportSerializer
 from .models import Report, School, Authority, District
 
 
@@ -150,3 +150,23 @@ class DistrictList(generics.ListAPIView):
     """
     queryset = District.objects.all()
     serializer_class = DistrictSerializer
+
+class EstimateReportListCreate(generics.ListCreateAPIView):
+    """
+    Lists all the estimated reports.
+    """
+    queryset = Report.objects.all()
+    serializer_class = EstimatedReportSerializer
+
+    def list(self, request):
+        queryset = self.get_queryset()
+        serializer = EstimatedReportSerializer(queryset.filter(actual_report__isnull=False), many=True)
+        return Response(serializer.data)
+
+    def perform_create(self, serializer):
+        return serializer.save()
+
+class SchoolReportRetrieveUpdate(generics.RetrieveUpdateAPIView):
+
+    queryset = Report.objects.filter(actual_report__isnull=False)
+    serializer_class = EstimatedReportSerializer

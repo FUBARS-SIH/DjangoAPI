@@ -60,6 +60,41 @@ class SchoolReportSerializer(serializers.ModelSerializer):
         return instance
 
 
+class EstimatedReportSerializer(serializers.ModelSerializer):
+    items = ReportItemSerializer(many=True)
+
+    class Meta:
+        model = Report
+        fields = [
+            'id',
+            'student_count',
+            'for_date',
+            'items',
+        ]
+
+    @transaction.atomic
+    def create(self, validateddata):
+        itemsdata = validateddata.pop('items')
+        school = validateddata.get('school')
+        for_date = validateddata.get('for_date')
+        actual_report = Report.objects.get(school=school, for_date=for_date)
+        report = Report.objects.create(actual_report=actual_report, **validateddata)
+        for itemdata in itemsdata:
+            ReportItem.objects.create(report=report, **itemdata)
+        return report
+
+    @transaction.atomic
+    def update(self, instance, validateddata):
+        itemsdata = validateddata.pop('items')
+        for attr, value in validateddata.items():
+            setattr(instance, attr, value)
+        if itemsdata:
+            instance.items.all().delete()
+            for itemdata in itemsdata:
+                ReportItem.objects.create(report=instance, **itemdata)
+        instance.save()
+        return instance
+
 class AuthoritySerializer(serializers.ModelSerializer):
 
     class Meta:

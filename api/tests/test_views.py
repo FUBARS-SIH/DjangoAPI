@@ -486,3 +486,5 @@ class DistrictTests(APITestCase):
             self.districts, many=True).data
         response_data = json.loads(response.content)
         self.assertEqual(response_data, district_serializer_data)
+
+
