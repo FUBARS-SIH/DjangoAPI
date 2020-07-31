@@ -1,4 +1,4 @@
-from djoser.serializers import UserCreateSerializer
+from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework import serializers
 from .models import CustomUser, Authority, School, Report, District, ReportItem
 from collections import OrderedDict
@@ -14,6 +14,16 @@ class CustomUserCreateSerializer(UserCreateSerializer):
             'username',
             'email',
             'password',
+        ]
+
+
+class CustomUserSerializer(UserSerializer):
+
+    class Meta(UserSerializer.Meta):
+        fields = [
+            'id',
+            'username',
+            'email',
             'is_authority',
         ]
 
@@ -40,22 +50,22 @@ class SchoolReportSerializer(serializers.ModelSerializer):
         ]
 
     @transaction.atomic
-    def create(self, validateddata):
-        itemsdata = validateddata.pop('items')
-        report = Report.objects.create(**validateddata)
-        for itemdata in itemsdata:
-            ReportItem.objects.create(report=report, **itemdata)
+    def create(self, validated_data):
+        items_data = validated_data.pop('items')
+        report = Report.objects.create(**validated_data)
+        for item_data in items_data:
+            ReportItem.objects.create(report=report, **item_data)
         return report
 
     @transaction.atomic
-    def update(self, instance, validateddata):
-        itemsdata = validateddata.pop('items')
-        for attr, value in validateddata.items():
+    def update(self, instance, validated_data):
+        items_data = validated_data.pop('items')
+        for attr, value in validated_data.items():
             setattr(instance, attr, value)
-        if itemsdata:
+        if items_data:
             instance.items.all().delete()
-            for itemdata in itemsdata:
-                ReportItem.objects.create(report=instance, **itemdata)
+            for item_data in items_data:
+                ReportItem.objects.create(report=instance, **item_data)
         instance.save()
         return instance
 
@@ -73,27 +83,29 @@ class EstimatedReportSerializer(serializers.ModelSerializer):
         ]
 
     @transaction.atomic
-    def create(self, validateddata):
-        itemsdata = validateddata.pop('items')
-        school = validateddata.get('school')
-        for_date = validateddata.get('for_date')
+    def create(self, validated_data):
+        items_data = validated_data.pop('items')
+        school = validated_data.get('school')
+        for_date = validated_data.get('for_date')
         actual_report = Report.objects.get(school=school, for_date=for_date)
-        report = Report.objects.create(actual_report=actual_report, **validateddata)
-        for itemdata in itemsdata:
-            ReportItem.objects.create(report=report, **itemdata)
+        report = Report.objects.create(
+            actual_report=actual_report, **validated_data)
+        for item_data in items_data:
+            ReportItem.objects.create(report=report, **item_data)
         return report
 
     @transaction.atomic
-    def update(self, instance, validateddata):
-        itemsdata = validateddata.pop('items')
-        for attr, value in validateddata.items():
+    def update(self, instance, validated_data):
+        items_data = validated_data.pop('items')
+        for attr, value in validated_data.items():
             setattr(instance, attr, value)
-        if itemsdata:
+        if items_data:
             instance.items.all().delete()
-            for itemdata in itemsdata:
-                ReportItem.objects.create(report=instance, **itemdata)
+            for item_data in items_data:
+                ReportItem.objects.create(report=instance, **item_data)
         instance.save()
         return instance
+
 
 class AuthoritySerializer(serializers.ModelSerializer):
 
@@ -103,6 +115,15 @@ class AuthoritySerializer(serializers.ModelSerializer):
             'user_id',
             'district',
         ]
+
+    @transaction.atomic
+    def create(self, validated_data):
+        authority = Authority.objects.create(**validated_data)
+        schools = School.objects.filter(district=authority.district)
+        for school in schools:
+            school.authority = authority
+        School.objects.bulk_update(schools, ['authority'])
+        return authority
 
 
 class SchoolSerializer(serializers.ModelSerializer):
@@ -115,13 +136,13 @@ class SchoolSerializer(serializers.ModelSerializer):
             'district',
         ]
 
-    def create(self, validateddata):
+    def create(self, validated_data):
         try:
             authority = Authority.objects.get(
-                district=validateddata['district'])
-            return School.objects.create(authority=authority, **validateddata)
+                district=validated_data['district'])
+            return School.objects.create(authority=authority, **validated_data)
         except Authority.DoesNotExist:
-            return School.objects.create(**validateddata)
+            return School.objects.create(**validated_data)
         except Exception as e:
             pass
 
@@ -169,6 +190,8 @@ class AuthorityReportSerializer(serializers.Serializer):
             self._data['estimate_student_count'] = estimate_report.student_count
             self._data['estimate_items'] = ReportItemSerializer(
                 estimate_report.items, many=True).data
+            self._data['school'] = SchoolSerializer(estimate_report.school).data
+            self._data['for_date'] = estimate_report.for_date
         else:
             self._data['estimate_student_count'] = 0
             self._data['estimate_items'] = ReportItemSerializer(
