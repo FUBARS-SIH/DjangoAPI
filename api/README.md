@@ -211,7 +211,7 @@ Use this endpoint to retrieve the details of the currently logged in school.
 
 **Method**: `GET`
 
-**_Requires_**: user_id of the current school
+**_Requires_**: Auth token to be passed in the header
 
 ### Response Parameters
 |Parameter|Description|
@@ -229,7 +229,7 @@ Use this endpoint to list the reports of the current school
 
 **Method**: `GET`
 
-**_Requires_**: user_id of the current school 
+**_Requires_**: Auth token to be passed in the header 
 
 ### Response Parameters
 |Parameter|Description|
@@ -245,67 +245,68 @@ Use this endpoint to create a report for current school
 
 **Method**: `POST`
 
+**_Requires_**: Auth token to be passed in the header
+
 ### Request Parameters
 |Parameter|Description  |
 |--|--|
-|`reported_student_count`|Student attendence|
-|`reported_menu`|ID of the menu which belongs to the current report|
-|`reported_for_date`|Date of the report|
+|`student_count`|Student attendence|
+|`items`|Array of the items. Example: `[{'item': 'egg'}, {'item': 'rice'}]`|
+|`for_date`|Date of the report|
 
 
 ### Response Parameters
 |Parameter|Description|
 |--|--|
 |`status`|`HTTP_201_CREATED`|
-|`id`|ID of the current report|
-|`school`|ID of the current school the report belongs to|
-|`reported_student_count`|Student attendence|
-|`reported_menu`|ID of the menu which belongs to the current report|
-|`reported_for_date`|Date of the report|
+|`id`|ID of the report created|
+|`student_count`|Student attendence|
+|`items`|Array of the items. Example: `[{'item': 'egg'}, {'item': 'rice'}]`|
+|`for_date`|Date of the report|
 
 ## Current report retrieve
 
 Use this endpoint to retrieve the details of the current report.
 
-**URL**: `schools/me/reports/<int:pk>`
+**URL**: `schools/me/reports/<report_id>`
 
 **Method**: `GET`
-**_Requires_**: Id of the current report
+
+**_Requires_**: Auth token to be passed in the header
 
 ### Response Parameters
 |Parameter|Description|
 |--|--|
-|`status`|`HTTP_200_OK`|
-|`id`|ID of the current report|
-|`school`|ID of the current school the report belongs to|
-|`reported_student_count`|Student attendence|
-|`reported_menu`|ID of the menu which belongs to the current report|
-|`reported_for_date`|Date of the report|
+|`status`|`HTTP_201_CREATED`|
+|`id`|ID of the report created|
+|`student_count`|Student attendence|
+|`items`|Array of the items. Example: `[{'item': 'egg'}, {'item': 'rice'}]`|
+|`for_date`|Date of the report|
 
 
 ## Current report update
 
 Use this endpoint to update the details of the current report.
 
-**URL**: `schools/me/reports/<int:pk>`
+**URL**: `schools/me/reports/<report_id>`
 
 **Method**: `PUT` or `PATCH`
 
-**_Requires_**: Id of the current report
+**_Requires_**: Auth token to be passed in the header
 
 ### Request Parameters
 |Parameter|Description  |
 |--|--|
-|`reported_student_count`|Attendence of the student to be updated.|
-|`reported_menu`|ID of the menu which belongs to the current report|
-|`reported_for_date`|Date of the report to be updated. Returns a `HTTP_400_BAD_REQUEST` if there is another report with the same date.|
+|--|--|
+|`student_count`|Student attendence|
+|`items`|Array of the items. Example: `[{'item': 'egg'}, {'item': 'rice'}]`|
+|`for_date`|Date of the report to be updated. Returns a `HTTP_400_BAD_REQUEST` if there is another report with the same date.|
 
 ### Response Parameters
 |Parameter|Description|
 |--|--|
-|`status`|`HTTP_201_CREATED`|
-|`id`|ID of the current report|
-|`school`|ID of the current school the report belongs to|
-|`reported_student_count`|Student attendence|
-|`reported_menu`|ID of the menu which belongs to the current report|
-|`reported_for_date`|Date of the report|
+|`status`|`HTTP_200_OK`|
+|`id`|ID of the report created|
+|`student_count`|Student attendence|
+|`items`|Array of the items. Example: `[{'item': 'egg'}, {'item': 'rice'}]`|
+|`for_date`|Date of the report|
