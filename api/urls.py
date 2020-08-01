@@ -10,4 +10,6 @@ urlpatterns = [
   path('schools/me/reports/', views.SchoolReportListCreate.as_view(), name='school_report_list_create'),
   path('schools/me/reports/<int:pk>', views.SchoolReportRetrieveUpdate.as_view(), name='school_report_retrieve_update'),
   path('districts/', views.DistrictList.as_view(), name='district_list'),
+  path('estimate/reports/',views.EstimateReportListCreate.as_view(), name='estimate_report_list_create'),
+  path('estimate/reports/<int:pk>', views.EstimateReportRetrieveUpdate.as_view(), name='estimate_report_retrieve_update'),
 ]

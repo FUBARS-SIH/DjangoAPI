@@ -70,7 +70,7 @@ class SchoolReportSerializer(serializers.ModelSerializer):
         return instance
 
 
-class EstimatedReportSerializer(serializers.ModelSerializer):
+class EstimateReportSerializer(serializers.ModelSerializer):
     items = ReportItemSerializer(many=True)
 
     class Meta:
