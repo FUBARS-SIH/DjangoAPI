@@ -47,13 +47,14 @@ class Report(models.Model):
     on_datetime = models.DateTimeField(
         'date and time reported on', auto_now_add=True)
     actual_report = models.OneToOneField('self', related_name='estimate_report', on_delete=models.CASCADE, null=True, blank=True)
+    added_by_school = models.BooleanField(default=False)
 
     def __str__(self):
-        report_type = 'Actual report' if self.actual_report == None else 'Estimate report'
+        report_type = 'Actual report' if self.added_by_school == True else 'Estimate report'
         return '{} - {} - {}'.format(self.school_id, self.for_date, report_type)
 
     class Meta:
-        unique_together = ('school', 'for_date', 'actual_report')
+        unique_together = ('school', 'for_date', 'added_by_school')
 
 
 class ReportItem(models.Model):

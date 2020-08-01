@@ -71,7 +71,7 @@ class AuthorityReportList(APIView):
         for school in schools:
 
             actual_reports = reports.filter(
-                actual_report__isnull=True, school=school)
+                added_by_school=True, school=school)
             for actual_report in actual_reports:
                 try:
                     estimate_report = actual_report.estimate_report
@@ -125,7 +125,7 @@ class SchoolReportListCreate(generics.ListCreateAPIView):
     def list(self, request):
         queryset = self.get_queryset()
         serializer = SchoolReportSerializer(queryset.filter(
-            school__user=request.user, actual_report__isnull=True), many=True)
+            school__user=request.user, added_by_school=True), many=True)
         return Response(serializer.data)
 
     def perform_create(self, serializer):
@@ -139,7 +139,7 @@ class SchoolReportRetrieveUpdate(generics.RetrieveUpdateAPIView):
     Retrieve or update reports created by currently
     logged in school.
     """
-    queryset = Report.objects.filter(actual_report__isnull=True)
+    queryset = Report.objects.filter(added_by_school=True)
     serializer_class = SchoolReportSerializer
     permission_classes = [IsAuthenticated, IsSchoolOwner]
 
@@ -160,7 +160,7 @@ class EstimateReportListCreate(generics.ListCreateAPIView):
 
     def list(self, request):
         queryset = self.get_queryset()
-        serializer = EstimateReportSerializer(queryset.filter(actual_report__isnull=False), many=True)
+        serializer = EstimateReportSerializer(queryset.filter(added_by_school=False), many=True)
         return Response(serializer.data)
 
     def perform_create(self, serializer):
@@ -168,5 +168,5 @@ class EstimateReportListCreate(generics.ListCreateAPIView):
 
 class EstimateReportRetrieveUpdate(generics.RetrieveUpdateAPIView):
 
-    queryset = Report.objects.filter(actual_report__isnull=False)
+    queryset = Report.objects.filter(added_by_school=False)
     serializer_class = EstimateReportSerializer

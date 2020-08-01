@@ -52,7 +52,8 @@ class AuthorityTests(APITestCase):
         report = Report.objects.create(
             school=school,
             student_count=45,
-            for_date=date
+            for_date=date,
+            added_by_school=True
         )
         items = ['idly', 'dosa', 'chutney']
         report.items.bulk_create(
@@ -141,23 +142,6 @@ class AuthorityTests(APITestCase):
         self.api_authenticate()
         authority = self.create_authority_with_current_user()
         schools = self.create_schools_reporting_to_authority(authority, 2)
-        all_reports = []
-        for school in schools:
-            all_reports.extend(self.create_reports_with_school(school, 2))
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-        full_report_serializer_data = FullReportSerializer(
-            all_reports, many=True).data
-        response_data = json.loads(response.content)
-        self.assertCountEqual(response_data, full_report_serializer_data)
-
-    def test_authority_report_list_with_auth(self):
-        url = reverse('authority_report_list')
-
-        self.api_authenticate()
-        authority = self.create_authority_with_current_user()
-        schools = self.create_schools_reporting_to_authority(authority, 2)
 
         actual_report_1 = self.create_actual_report_with_school_for_date(
             schools[0], date(2020, 1, 1))
@@ -231,6 +215,7 @@ class SchoolTests(APITestCase):
                 school=school,
                 student_count=45,
                 for_date=(date.today() - timedelta(i)),
+                added_by_school=True
             )
             items = ['idly', 'dosa']
             report.items.bulk_create(
@@ -380,11 +365,12 @@ class SchoolTests(APITestCase):
             school=school,
             student_count=45,
             for_date=(date.today()),
+            added_by_school=True
         )
         items = ['idly', 'dosa', 'chutney']
         report.items.bulk_create(
             [ReportItem(report=report, item=item) for item in items])
-
+        
         url = reverse('school_report_retrieve_update',
                       kwargs={"pk": report.pk})
 
@@ -422,6 +408,7 @@ class SchoolTests(APITestCase):
             school=school,
             student_count=45,
             for_date=(date(2020, 1, 10)),
+            added_by_school=True
         )
         items = ['idly', 'dosa', 'chutney']
         report.items.bulk_create(

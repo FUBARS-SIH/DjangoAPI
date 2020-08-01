@@ -52,10 +52,18 @@ class SchoolReportSerializer(serializers.ModelSerializer):
     @transaction.atomic
     def create(self, validated_data):
         items_data = validated_data.pop('items')
-        report = Report.objects.create(**validated_data)
-        for item_data in items_data:
-            ReportItem.objects.create(report=report, **item_data)
-        return report
+        report = Report.objects.create(**validated_data, added_by_school=True)
+        try:
+            school = validated_data.get('school')
+            estimate_report = Report.objects.get(school=school, for_date=for_date)
+            estimate_report.actual_report = report
+            estimate_report.save()
+        except:
+            pass
+        finally:
+            for item_data in items_data:
+                ReportItem.objects.create(report=report, **item_data)
+            return report
 
     @transaction.atomic
     def update(self, instance, validated_data):
@@ -80,6 +88,7 @@ class EstimateReportSerializer(serializers.ModelSerializer):
             'student_count',
             'for_date',
             'items',
+            'school',
         ]
 
     @transaction.atomic
@@ -87,12 +96,16 @@ class EstimateReportSerializer(serializers.ModelSerializer):
         items_data = validated_data.pop('items')
         school = validated_data.get('school')
         for_date = validated_data.get('for_date')
-        actual_report = Report.objects.get(school=school, for_date=for_date)
-        report = Report.objects.create(
-            actual_report=actual_report, **validated_data)
-        for item_data in items_data:
-            ReportItem.objects.create(report=report, **item_data)
-        return report
+        try:
+            actual_report = Report.objects.get(school=school, for_date=for_date)
+            report = Report.objects.create(
+                actual_report=actual_report, **validated_data)
+        except Report.DoesNotExist:
+            report = Report.objects.create(**validated_data)
+        finally:
+            for item_data in items_data:
+                ReportItem.objects.create(report=report, **item_data)
+            return report
 
     @transaction.atomic
     def update(self, instance, validated_data):
