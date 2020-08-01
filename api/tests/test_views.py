@@ -5,7 +5,7 @@ from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APITestCase
 from api.models import CustomUser, Authority, Report, District, School, ReportItem
-from api.serializers import AuthoritySerializer, SchoolSerializer, SchoolReportSerializer, DistrictSerializer, AuthorityReportSerializer
+from api.serializers import AuthoritySerializer, SchoolSerializer, SchoolReportSerializer, DistrictSerializer, AuthorityReportSerializer, EstimateReportSerializer
 
 
 class AuthorityTests(APITestCase):
@@ -475,3 +475,66 @@ class DistrictTests(APITestCase):
         self.assertEqual(response_data, district_serializer_data)
 
 
+class EstimateReportTests(APITestCase):
+
+    def setUp(self):
+        self.district = District.objects.create(name='XYZ')
+        self.user = CustomUser.objects.create_user(username='xxx', email='f@gmail.com', password='xxxxxxx')
+        self.school = School.objects.create(user=self.user, name='AAA', district=self.district)
+    
+    def create_estimated_report(self):
+        report = Report.objects.create(
+            school=self.school,
+            student_count=45,
+            for_date= '2020-01-10',
+        )
+        items = ['idly', 'dosa']
+        report.items.bulk_create(
+            [ReportItem(report=report, item=item) for item in items])
+        return report
+
+    def test_estimate_report_create(self):
+        url = reverse('estimate_report_list_create')
+        school = self.school
+        data = {
+            'student_count': 45,
+            'for_date': '2020-01-10',
+            'items': [
+                {'item': 'idly'},
+                {'item': 'dosa'}
+            ],
+            'school': school.user.id
+        }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Report.objects.count(), 1)
+        report = Report.objects.get()
+        self.assertEqual(report.student_count,
+                         data['student_count'])
+        self.assertEqual(report.items.count(), len(data['items']))
+        test_items_list = list(map((lambda d: d['item']), data['items']))
+        for i, item in enumerate(report.items.all()):
+            self.assertEqual(item.report.id, report.id)
+            self.assertTrue(item.item in test_items_list)
+        self.assertEqual(report.for_date, date(2020, 1, 10))
+
+    def test_estimate_report_retrieve(self):
+        school = self.school
+        report = Report.objects.create(
+            school=school,
+            student_count=45,
+            for_date=(date.today()),
+        )
+        items = ['idly', 'dosa', 'chutney']
+        report.items.bulk_create(
+            [ReportItem(report=report, item=item) for item in items])
+
+        url = reverse('estimate_report_retrieve_update',
+                      kwargs={"pk": report.pk})
+
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        report_serializer_data = EstimateReportSerializer(report).data
+        response_data = json.loads(response.content)
+        self.assertEqual(response_data, report_serializer_data)
