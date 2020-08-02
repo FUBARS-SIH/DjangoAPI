@@ -6,7 +6,7 @@ from django.shortcuts import get_object_or_404
 from django.core.exceptions import ValidationError
 from django.http import Http404
 from .permissions import IsOwnerOrReadOnly, IsSchoolOwner, IsOwner
-from .serializers import SchoolReportSerializer, AuthoritySerializer, SchoolSerializer, DistrictSerializer, AuthorityReportSerializer, EstimateReportSerializer
+from .serializers import SchoolReportSerializer, SchoolReportCreateSerializer, AuthoritySerializer, SchoolSerializer, DistrictSerializer, AuthorityReportSerializer, EstimateReportSerializer
 from .models import Report, School, Authority, District
 
 
@@ -112,9 +112,23 @@ class SchoolMeRetrieveUpdate(MeRetrieveUpdate):
     permission_classes = [IsAuthenticated, IsOwner]
 
 
-class SchoolReportListCreate(generics.ListCreateAPIView):
+class SchoolReportCreate(generics.CreateAPIView):
     """
     Creates new reports by school.
+    Request has to be initiated by the owner school.
+    """
+    queryset = Report.objects.all()
+    serializer_class = SchoolReportCreateSerializer
+    permission_classes = [IsAuthenticated, IsSchoolOwner]
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        school = School.objects.get(user=user)
+        return serializer.save(school=school)
+
+
+class SchoolReportList(generics.ListAPIView):
+    """
     Lists all the reports created by a school.
     Request has to be initiated by the owner school.
     """
@@ -128,19 +142,24 @@ class SchoolReportListCreate(generics.ListCreateAPIView):
             school__user=request.user, added_by_school=True), many=True)
         return Response(serializer.data)
 
-    def perform_create(self, serializer):
-        user = self.request.user
-        school = School.objects.get(user=user)
-        return serializer.save(school=school)
 
-
-class SchoolReportRetrieveUpdate(generics.RetrieveUpdateAPIView):
+class SchoolReportRetrieve(generics.RetrieveAPIView):
     """
-    Retrieve or update reports created by currently
+    Retrieve reports created by currently
     logged in school.
     """
     queryset = Report.objects.filter(added_by_school=True)
     serializer_class = SchoolReportSerializer
+    permission_classes = [IsAuthenticated, IsSchoolOwner]
+
+
+class SchoolReportUpdate(generics.UpdateAPIView):
+    """
+    Update reports created by currently
+    logged in school.
+    """
+    queryset = Report.objects.filter(added_by_school=True)
+    serializer_class = SchoolReportCreateSerializer
     permission_classes = [IsAuthenticated, IsSchoolOwner]
 
 

@@ -46,12 +46,24 @@ class SchoolReportSerializer(serializers.ModelSerializer):
             'id',
             'student_count',
             'for_date',
-            'items',
+            'items'
+        ]
+
+
+class SchoolReportCreateSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Report
+        fields = [
+            'id',
+            'student_count',
+            'for_date',
         ]
 
     @transaction.atomic
     def create(self, validated_data):
-        items_data = validated_data.pop('items')
+        # Should pass the items
+        items_data = []
         report = Report.objects.create(**validated_data, added_by_school=True)
         try:
             school = validated_data.get('school')
@@ -67,7 +79,8 @@ class SchoolReportSerializer(serializers.ModelSerializer):
 
     @transaction.atomic
     def update(self, instance, validated_data):
-        items_data = validated_data.pop('items')
+        # Should pass the items
+        items_data = []
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         if items_data:
