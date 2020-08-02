@@ -9,6 +9,6 @@ djangorestframework = "*"
 djoser = "*"
 psycopg2 = "*"
 email-validator = "*"
+django-heroku = "*"
 
 [dev-packages]
-
