@@ -25,25 +25,26 @@ def send_discrepancy_email(sender, instance, created, **kwargs):
         #                instance.estimate.student_count, instance.estimate.items.all()
         send_mail(
             'Report Discrepancy: School {} - {}'.format(instance.school.name, instance.for_date),
-            "Hii",
+            """
+            Dear Sir/Madam,
+
+            There seems to be a discrepancy in the {}'s report for the school {}. 
+
+            Report given by school:
+
+            Student count: {},
+            Food items: {}
+
+            Report predicted by the system:
+
+            Student count: {},
+            Food items: {}
+            """.format(instance.for_date, instance.school.name, 
+                       instance.actual.student_count, instance.actual.items.all(),
+                       instance.estimate.student_count, instance.estimate.items.all()),
             'jyuvaraj000@gmail.com',
             ['sooryaprakashr31@gmail.com, vishal21999@gmail.com'],
             # [instance.school.authority.email],
             fail_silently=False,
         )
-            # Dear Sir/Madam,
-
-            # There seems to be a discrepancy in the {}'s report for the school {}. 
-
-            # Report given by school:
-
-            # Student count: {},
-            # Food items: {}
-
-            # Report predicted by the system:
-
-            # Student count: {},
-            # Food items: {}
-            # """.format(instance.for_date, instance.school.name, 
-            #            instance.actual.student_count, instance.actual.items.all(),
-            #            instance.estimate.student_count, instance.estimate.items.all())
+            
