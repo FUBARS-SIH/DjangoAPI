@@ -167,10 +167,20 @@ class SchoolSerializer(serializers.ModelSerializer):
 
 class AuthorityReportSerializer(serializers.ModelSerializer):
     is_discrepant = serializers.ReadOnlyField()
+    school = SchoolSerializer()
+    estimate = EstimateReportSerializer()
+    actual = SchoolReportSerializer()
 
     class Meta:
         model = AuthorityReport
-        fields = '__all__'
+        fields = [
+            'id',
+            'for_date',
+            'school',
+            'estimate',
+            'actual',
+            'is_discrepant'
+        ]
 
 
 class DistrictSerializer(serializers.ModelSerializer):
