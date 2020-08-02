@@ -1,6 +1,6 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-
+from django.core.mail import send_mail
 from api.models import Report, AuthorityReport
 
 @receiver(post_save, sender=Report)
@@ -20,5 +20,30 @@ def create_authority_report(sender, instance, created, **kwargs):
 @receiver(post_save, sender=AuthorityReport)
 def send_discrepancy_email(sender, instance, created, **kwargs):
     if instance.is_discrepant:
-        # TODO: send email to authority
-        pass
+        # instance.for_date, instance.school.name, 
+        #                instance.actual.student_count, instance.actual.items.all(),
+        #                instance.estimate.student_count, instance.estimate.items.all()
+        send_mail(
+            'Report Discrepancy: School {} - {}'.format(instance.school.name, instance.for_date),
+            "Hii",
+            'jyuvaraj000@gmail.com',
+            ['sooryaprakashr31@gmail.com, vishal21999@gmail.com'],
+            # [instance.school.authority.email],
+            fail_silently=False,
+        )
+            # Dear Sir/Madam,
+
+            # There seems to be a discrepancy in the {}'s report for the school {}. 
+
+            # Report given by school:
+
+            # Student count: {},
+            # Food items: {}
+
+            # Report predicted by the system:
+
+            # Student count: {},
+            # Food items: {}
+            # """.format(instance.for_date, instance.school.name, 
+            #            instance.actual.student_count, instance.actual.items.all(),
+            #            instance.estimate.student_count, instance.estimate.items.all())
