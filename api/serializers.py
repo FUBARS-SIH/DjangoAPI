@@ -76,7 +76,8 @@ class SchoolReportCreateSerializer(serializers.ModelSerializer):
             pass
         finally:
             for item_data in items_data:
-                ReportItem.objects.create(report=report, **item_data)
+                item = item_data.item
+                ReportItem.objects.create(report=report, item=item)
             return report
 
     # @transaction.atomic
