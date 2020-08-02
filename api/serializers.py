@@ -1,6 +1,6 @@
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework import serializers
-from .models import CustomUser, Authority, School, Report, District, ReportItem, Schedule
+from .models import CustomUser, Authority, School, Report, District, ReportItem, Schedule, AuthorityReport
 from collections import OrderedDict
 from django.core.exceptions import ValidationError
 from django.db import transaction
@@ -68,8 +68,9 @@ class SchoolReportCreateSerializer(serializers.ModelSerializer):
         for_day = for_date.weekday()
         items_data = Schedule.objects.filter(district=school.district, day=for_day)
         report = Report.objects.create(**validated_data, added_by_school=True)
-        try:   
-            estimate_report = Report.objects.get(school=school, for_date=for_date)
+        try:
+            estimate_report = Report.objects.get(
+                school=school, for_date=for_date)
             estimate_report.actual_report = report
             estimate_report.save()
         except:
@@ -79,22 +80,6 @@ class SchoolReportCreateSerializer(serializers.ModelSerializer):
                 item = item_data.item
                 ReportItem.objects.create(report=report, item=item)
             return report
-
-    # @transaction.atomic
-    # def update(self, instance, validated_data):
-    #     # Should pass the items
-    #     school = validated_data.get('school')
-    #     for_date = validated_data.get('for_date')
-    #     for_day = for_date.weekday()
-    #     items_data = Schedule.objects.filter(district=school.district, day=for_day)
-    #     for attr, value in validated_data.items():
-    #         setattr(instance, attr, value)
-    #     if items_data:
-    #         instance.items.all().delete()
-    #         for item_data in items_data:
-    #             ReportItem.objects.create(report=instance, **item_data)
-    #     instance.save()
-    #     return instance
 
 
 class EstimateReportSerializer(serializers.ModelSerializer):
@@ -116,7 +101,8 @@ class EstimateReportSerializer(serializers.ModelSerializer):
         school = validated_data.get('school')
         for_date = validated_data.get('for_date')
         try:
-            actual_report = Report.objects.get(school=school, for_date=for_date)
+            actual_report = Report.objects.get(
+                school=school, for_date=for_date)
             report = Report.objects.create(
                 actual_report=actual_report, **validated_data)
         except Report.DoesNotExist:
@@ -179,55 +165,12 @@ class SchoolSerializer(serializers.ModelSerializer):
             pass
 
 
-class AuthorityReportSerializer(serializers.Serializer):
-    """
-    Custom Serializer for authority reports.
-    Required inputs as kwargs:
-    * actual_report: Actual report object
-    * estimate_report: Estimate report object of the actual report
-    """
+class AuthorityReportSerializer(serializers.ModelSerializer):
+    is_discrepant = serializers.ReadOnlyField()
 
-    def __init__(self, *args, **kwargs):
-        actual_report = kwargs.pop('actual_report', None)
-        estimate_report = kwargs.pop('estimate_report', None)
-        super(AuthorityReportSerializer, self).__init__(*args, **kwargs)
-
-        self._data = OrderedDict()
-
-        if not (actual_report or estimate_report):
-            raise ValidationError(
-                _('Neither actual report nor estimate report is given.'))
-
-        if actual_report and estimate_report:
-            if actual_report.for_date != estimate_report.for_date:
-                raise ValidationError(
-                    _('The for date in the reports do not match.'))
-
-            if actual_report.school != estimate_report.school:
-                raise ValidationError(
-                    _('The schools in the report do not match.'))
-
-        if actual_report:
-            self._data['actual_student_count'] = actual_report.student_count
-            self._data['actual_items'] = ReportItemSerializer(
-                actual_report.items, many=True).data
-            self._data['school'] = SchoolSerializer(actual_report.school).data
-            self._data['for_date'] = actual_report.for_date
-        else:
-            self._data['actual_student_count'] = 0
-            self._data['actual_items'] = ReportItemSerializer(
-                [], many=True).data
-
-        if estimate_report:
-            self._data['estimate_student_count'] = estimate_report.student_count
-            self._data['estimate_items'] = ReportItemSerializer(
-                estimate_report.items, many=True).data
-            self._data['school'] = SchoolSerializer(estimate_report.school).data
-            self._data['for_date'] = estimate_report.for_date
-        else:
-            self._data['estimate_student_count'] = 0
-            self._data['estimate_items'] = ReportItemSerializer(
-                [], many=True).data
+    class Meta:
+        model = AuthorityReport
+        fields = '__all__'
 
 
 class DistrictSerializer(serializers.ModelSerializer):

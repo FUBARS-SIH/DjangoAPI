@@ -56,6 +56,38 @@ class Report(models.Model):
         unique_together = ('school', 'for_date', 'added_by_school')
 
 
+class AuthorityReport(models.Model):
+    school = models.ForeignKey(School, on_delete=models.CASCADE)
+    estimate = models.ForeignKey(Report, related_name='estimate', on_delete=models.CASCADE)
+    actual = models.ForeignKey(Report, related_name='actual', on_delete=models.CASCADE)
+    for_date = models.DateField(blank=False)
+
+    @property
+    def is_discrepant(self):
+        """
+        Returns whether the estimate and actual reports differ.
+        """
+        student_count_diff = abs(self.estimate.student_count - self.actual.student_count)
+        student_discrepancy_ratio = student_count_diff / max(self.estimate.student_count, self.actual.student_count)
+
+        if student_discrepancy_ratio >= 0.1:
+            return True
+
+        actual_items = self.actual.items.all()
+        estimate_items = self.estimate.items.all()
+        
+        if not all(item in actual_items for item in estimate_items):
+            return True
+
+        return False
+
+    def __str__(self):
+        return '{} - {}'.format(self.school_id, self.for_date)
+
+    class Meta:
+        unique_together = ('school', 'for_date')
+
+
 class ReportItem(models.Model):
     report = models.ForeignKey(Report, related_name='items', on_delete=models.CASCADE)
     item = models.CharField(max_length=200, blank=False, null=False)
