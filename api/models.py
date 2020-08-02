@@ -66,3 +66,23 @@ class ReportItem(models.Model):
 
     class Meta:
         unique_together = ('report', 'item')
+
+
+class Schedule(models.Model):
+    district = models.ForeignKey(District, on_delete=models.PROTECT)
+    days = (
+        (1, 'Monday'),
+        (2, 'Tuesday'),
+        (3, 'Wednesday'),
+        (4, 'Thursday'),
+        (5, 'Friday')
+    )
+    day = models.IntegerField(choices=days)
+    item = models.CharField(max_length=200, blank=False, null=False)
+
+    def __str__(self):
+        return '{}'.format(self.district)
+    
+    class Meta:
+        unique_together = ('district', 'day')
+        
