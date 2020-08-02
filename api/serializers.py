@@ -1,6 +1,6 @@
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework import serializers
-from .models import CustomUser, Authority, School, Report, District, ReportItem
+from .models import CustomUser, Authority, School, Report, District, ReportItem, Schedule
 from collections import OrderedDict
 from django.core.exceptions import ValidationError
 from django.db import transaction
@@ -63,10 +63,12 @@ class SchoolReportCreateSerializer(serializers.ModelSerializer):
     @transaction.atomic
     def create(self, validated_data):
         # Should pass the items
-        items_data = []
+        school = validated_data.get('school')
+        for_date = validated_data.get('for_date')
+        for_day = for_date.weekday()
+        items_data = Schedule.objects.filter(district=school.district, day=for_day)
         report = Report.objects.create(**validated_data, added_by_school=True)
-        try:
-            school = validated_data.get('school')
+        try:   
             estimate_report = Report.objects.get(school=school, for_date=for_date)
             estimate_report.actual_report = report
             estimate_report.save()
@@ -77,18 +79,21 @@ class SchoolReportCreateSerializer(serializers.ModelSerializer):
                 ReportItem.objects.create(report=report, **item_data)
             return report
 
-    @transaction.atomic
-    def update(self, instance, validated_data):
-        # Should pass the items
-        items_data = []
-        for attr, value in validated_data.items():
-            setattr(instance, attr, value)
-        if items_data:
-            instance.items.all().delete()
-            for item_data in items_data:
-                ReportItem.objects.create(report=instance, **item_data)
-        instance.save()
-        return instance
+    # @transaction.atomic
+    # def update(self, instance, validated_data):
+    #     # Should pass the items
+    #     school = validated_data.get('school')
+    #     for_date = validated_data.get('for_date')
+    #     for_day = for_date.weekday()
+    #     items_data = Schedule.objects.filter(district=school.district, day=for_day)
+    #     for attr, value in validated_data.items():
+    #         setattr(instance, attr, value)
+    #     if items_data:
+    #         instance.items.all().delete()
+    #         for item_data in items_data:
+    #             ReportItem.objects.create(report=instance, **item_data)
+    #     instance.save()
+    #     return instance
 
 
 class EstimateReportSerializer(serializers.ModelSerializer):

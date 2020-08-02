@@ -1,8 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from .managers import CustomUserManager
-from django.db.models.functions import Now
-from django.contrib.postgres.fields import JSONField
+from django.core.validators import MaxValueValidator, MinValueValidator
 
 
 class CustomUser(AbstractUser):
@@ -70,19 +69,12 @@ class ReportItem(models.Model):
 
 class Schedule(models.Model):
     district = models.ForeignKey(District, on_delete=models.PROTECT)
-    days = (
-        (1, 'Monday'),
-        (2, 'Tuesday'),
-        (3, 'Wednesday'),
-        (4, 'Thursday'),
-        (5, 'Friday')
-    )
-    day = models.IntegerField(choices=days)
+    day = models.PositiveIntegerField(validators=[MinValueValidator(1), MaxValueValidator(100)])
     item = models.CharField(max_length=200, blank=False, null=False)
 
     def __str__(self):
         return '{}'.format(self.district)
     
     class Meta:
-        unique_together = ('district', 'day')
+        unique_together = ('district', 'day', 'item')
         

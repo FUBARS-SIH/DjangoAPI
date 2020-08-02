@@ -153,14 +153,14 @@ class SchoolReportRetrieve(generics.RetrieveAPIView):
     permission_classes = [IsAuthenticated, IsSchoolOwner]
 
 
-class SchoolReportUpdate(generics.UpdateAPIView):
-    """
-    Update reports created by currently
-    logged in school.
-    """
-    queryset = Report.objects.filter(added_by_school=True)
-    serializer_class = SchoolReportCreateSerializer
-    permission_classes = [IsAuthenticated, IsSchoolOwner]
+# class SchoolReportUpdate(generics.UpdateAPIView):
+#     """
+#     Update reports created by currently
+#     logged in school.
+#     """
+#     queryset = Report.objects.filter(added_by_school=True)
+#     serializer_class = SchoolReportCreateSerializer
+#     permission_classes = [IsAuthenticated, IsSchoolOwner]
 
 
 class DistrictList(generics.ListAPIView):
