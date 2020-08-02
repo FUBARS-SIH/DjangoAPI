@@ -10,5 +10,6 @@ djoser = "*"
 psycopg2 = "*"
 email-validator = "*"
 django-heroku = "*"
+gunicorn = "*"
 
 [dev-packages]
