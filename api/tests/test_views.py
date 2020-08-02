@@ -4,9 +4,10 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APITestCase
-from api.models import CustomUser, Authority, Report, District, School, ReportItem
+from api.models import CustomUser, Authority, Report, District, School, ReportItem, Schedule
 from api.serializers import AuthoritySerializer, SchoolSerializer, SchoolReportSerializer, SchoolReportCreateSerializer, DistrictSerializer, AuthorityReportSerializer, EstimateReportSerializer
-
+import datetime 
+import calendar 
 
 class AuthorityTests(APITestCase):
 
@@ -231,6 +232,26 @@ class SchoolTests(APITestCase):
         )
         return school
 
+
+    def create_schedule(self):
+        district=self.district
+        items = ['idly', 'dosa', 'vada', 'egg', 'chappati']
+        for day in range(5):
+            Schedule.objects.create(
+                district=district, 
+                day=day, 
+                item=items[day]
+            )
+
+
+    def findDay(self,date): 
+        days = {'Monday': 0, 'Tuesday': 1, 'Wednesday': 2, 'Thursday': 3, 'Friday': 4}
+        date = datetime.datetime.strptime(date, '%Y-%m-%d').weekday() 
+        day_str = calendar.day_name[date]
+        day_int = days[day_str]
+        return (day_int) 
+
+
     def test_school_enroll_with_auth(self):
         url = reverse('school_enroll')
         data = {'name': 'School A', 'district': self.district.id}
@@ -300,9 +321,13 @@ class SchoolTests(APITestCase):
         data = {
             'student_count': 45,
             'for_date': '2020-01-10',
-            'items': []
         }
 
+        day = self.findDay(data['for_date'])
+        district = self.district
+        self.create_schedule()
+        items = Schedule.objects.filter(district=district, day=day)
+        for item in items:
         self.api_authenticate()
         school = self.create_school_with_current_user()
         response = self.client.post(url, data, format='json')
@@ -312,7 +337,9 @@ class SchoolTests(APITestCase):
         self.assertEqual(report.school, school)
         self.assertEqual(report.student_count,
                          data['student_count'])
-        self.assertEqual(report.items.count(), 0)
+        self.assertEqual(report.items.count(), len(items))
+        for i,report_item in enumerate(report.items.all()):
+            self.assertEqual(report_item.item, items[i].item)
         self.assertEqual(report.for_date, date(2020, 1, 10))
 
     def test_school_report_create_without_auth(self):
