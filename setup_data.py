@@ -25,9 +25,9 @@ user4 = CustomUser.objects.create_user(username="school3", email="school3@gmail.
 
 authority = Authority.objects.create(user=user1, district=district1)
 
-school1 = school.objects.create(user=user2, name="SBOI" ,district=district1)
-school2 = school.objects.create(user=user3, name="PSBB" ,district=district1)
-school3 = school.objects.create(user=user4, name="DAV" ,district=district1)
+school1 = School.objects.create(user=user2, name="SBOI" ,district=district1)
+school2 = School.objects.create(user=user3, name="PSBB" ,district=district1)
+school3 = School.objects.create(user=user4, name="DAV" ,district=district1)
 
 
 report1 = Report.objects.create(school=school1, student_count=45, for_date=date(2020,8,3), added_by_school=True)

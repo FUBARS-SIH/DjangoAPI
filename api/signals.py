@@ -40,7 +40,7 @@ def send_discrepancy_email(sender, instance, created, **kwargs):
                        instance.actual.student_count, instance.actual.items.all(),
                        instance.estimate.student_count, instance.estimate.items.all()),
             'jyuvaraj000@gmail.com',
-            [instance.school.authority.user.email],
+            ['vishal21999@gmail.com'],
             # [instance.school.authority.email],
             fail_silently=False,
         )
