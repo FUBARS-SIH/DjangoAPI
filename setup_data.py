@@ -18,7 +18,7 @@ items2 = ['dosa', 'roti', 'dal', 'naan', 'bokra']
 for day in range(5):
     schedules.append(Schedule.objects.create(district=district, day=day, item=items2[day]))
 
-user1 = CustomUser.objects.create_user(username="auth", email="jyuvaraj000@gmail.com", password="teddybear")
+user1 = CustomUser.objects.create_user(username="auth", email="jyuvaraj000@gmail.com", password="teddybear", is_authority=True)
 user2 = CustomUser.objects.create_user(username="school1", email="school1@gmail.com", password="leomessilm10")
 user3 = CustomUser.objects.create_user(username="school2", email="school2@gmail.com", password="ronaldocr7")
 user4 = CustomUser.objects.create_user(username="school3", email="school3@gmail.com", password="neymarjunior")
