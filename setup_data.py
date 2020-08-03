@@ -22,13 +22,13 @@ user1 = CustomUser.objects.create_user(username="auth", email="jyuvaraj000@gmail
 user2 = CustomUser.objects.create_user(username="school1", email="school1@gmail.com", password="leomessilm10")
 user3 = CustomUser.objects.create_user(username="school2", email="school2@gmail.com", password="ronaldocr7")
 user4 = CustomUser.objects.create_user(username="school3", email="school3@gmail.com", password="neymarjunior")
-
+user5 = CustomUser.objects.create_user(username="school4", email="school5@gmail.com", password="neymarjunior")
 authority = Authority.objects.create(user=user1, district=district1)
 
 school1 = School.objects.create(user=user2, name="SBOI" ,district=district1)
 school2 = School.objects.create(user=user3, name="PSBB" ,district=district1)
 school3 = School.objects.create(user=user4, name="DAV" ,district=district1)
-
+school4 = School.objects.create(user=user5, name='VSSS', district=district1)
 
 report1 = Report.objects.create(school=school1, student_count=45, for_date=date(2020,8,3), added_by_school=True)
 report2 = Report.objects.create(school=school2, student_count=45, for_date=date(2020,8,3), added_by_school=True)

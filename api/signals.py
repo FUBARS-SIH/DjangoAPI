@@ -20,7 +20,7 @@ def create_authority_report(sender, instance, created, **kwargs):
 @receiver(post_save, sender=AuthorityReport)
 def send_discrepancy_email(sender, instance, created, **kwargs):
     if instance.is_discrepant:
-        send_mail(
+        print(
             'Report Discrepancy: School {} - {}'.format(instance.school.name, instance.for_date),
             """
             Dear Sir/Madam,
@@ -39,9 +39,5 @@ def send_discrepancy_email(sender, instance, created, **kwargs):
             """.format(instance.for_date, instance.school.name, 
                        instance.actual.student_count, instance.actual.items.all(),
                        instance.estimate.student_count, instance.estimate.items.all()),
-            'jyuvaraj000@gmail.com',
-            ['vishal21999@gmail.com'],
-            # [instance.school.authority.email],
-            fail_silently=False,
         )
                 
