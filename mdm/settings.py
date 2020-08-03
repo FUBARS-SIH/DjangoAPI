@@ -150,4 +150,4 @@ EMAIL_PORT = 587
 EMAIL_HOST_USER = 'jyuvaraj000@gmail.com'
 EMAIL_HOST_PASSWORD = 'iamyuvaraj'
 
-# django_heroku.settings(locals())
+django_heroku.settings(locals())
