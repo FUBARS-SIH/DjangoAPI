@@ -73,12 +73,6 @@ class AuthorityReport(models.Model):
         if student_discrepancy_ratio >= 0.1:
             return True
 
-        actual_items = self.actual.items.all()
-        estimate_items = self.estimate.items.all()
-        
-        if not all(item in actual_items for item in estimate_items):
-            return True
-
         return False
 
     def __str__(self):
