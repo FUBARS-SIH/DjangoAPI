@@ -57,10 +57,15 @@ class AuthorityReportList(generics.ListAPIView):
 
 
 class AuthorityReportDiscrepancyList(generics.ListAPIView):
-    queryset = AuthorityReport.objects.filter(is_discrepant= True)
+    queryset = AuthorityReport.objects.all()
     serializer_class = AuthorityReportSerializer
     permission_classes = [IsAuthenticated]
 
+    def list(self, request):
+        queryset = self.get_queryset()
+
+        serializer = AuthorityReportSerializer([x for x in queryset if x.is_discrepant], many=True)
+        return Response(serializer.data)
 
 class SchoolEnroll(generics.CreateAPIView):
     queryset = School.objects.all()
