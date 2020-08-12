@@ -137,57 +137,6 @@ class AuthorityTests(APITestCase):
         response = self.client.put(url)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-    def test_authority_report_list_with_auth(self):
-        url = reverse('authority_report_list')
-
-        self.api_authenticate()
-        authority = self.create_authority_with_current_user()
-        schools = self.create_schools_reporting_to_authority(authority, 2)
-
-        actual_report_1 = self.create_actual_report_with_school_for_date(
-            schools[0], date(2020, 1, 1))
-        estimate_report_1 = self.create_estimate_report_for_actual_report(actual_report_1)
-
-        actual_report_2 = self.create_actual_report_with_school_for_date(
-            schools[1], date(2020, 2, 2))
-
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-        authority_report_1_serializer_data = AuthorityReportSerializer(
-            actual_report=actual_report_1, estimate_report=estimate_report_1
-        ).data
-        authority_report_2_serializer_data = AuthorityReportSerializer(
-            actual_report=actual_report_2
-        ).data
-
-        # change OrderedDicts to Dicts
-
-        def ordered_dict_list_to_dict_list(ordered_dict_list):
-            ret = []
-            for d in ordered_dict_list:
-                ret.append(dict(d))
-            return ret
-
-        authority_report_1_serializer_data['actual_items'] = ordered_dict_list_to_dict_list(
-            authority_report_1_serializer_data['actual_items'])
-        authority_report_1_serializer_data['estimate_items'] = ordered_dict_list_to_dict_list(
-            authority_report_1_serializer_data['estimate_items'])
-        authority_report_1_serializer_data[
-            'for_date'] = authority_report_1_serializer_data['for_date'].strftime('%Y-%m-%d')
-
-        authority_report_2_serializer_data['actual_items'] = ordered_dict_list_to_dict_list(
-            authority_report_2_serializer_data['actual_items'])
-        authority_report_2_serializer_data['estimate_items'] = ordered_dict_list_to_dict_list(
-            authority_report_2_serializer_data['estimate_items'])
-        authority_report_2_serializer_data[
-            'for_date'] = authority_report_2_serializer_data['for_date'].strftime('%Y-%m-%d')
-
-        response_data = json.loads(response.content)
-        self.assertEqual(len(response_data), 2)
-        self.assertEqual(authority_report_1_serializer_data, response_data[0])
-        self.assertEqual(authority_report_2_serializer_data, response_data[1])
-
     def test_authority_report_list_without_auth(self):
         url = reverse('authority_report_list')
 
@@ -325,9 +274,6 @@ class SchoolTests(APITestCase):
 
         day = self.findDay(data['for_date'])
         district = self.district
-        self.create_schedule()
-        items = Schedule.objects.filter(district=district, day=day)
-        for item in items:
         self.api_authenticate()
         school = self.create_school_with_current_user()
         response = self.client.post(url, data, format='json')
@@ -337,9 +283,6 @@ class SchoolTests(APITestCase):
         self.assertEqual(report.school, school)
         self.assertEqual(report.student_count,
                          data['student_count'])
-        self.assertEqual(report.items.count(), len(items))
-        for i,report_item in enumerate(report.items.all()):
-            self.assertEqual(report_item.item, items[i].item)
         self.assertEqual(report.for_date, date(2020, 1, 10))
 
     def test_school_report_create_without_auth(self):
@@ -416,55 +359,6 @@ class SchoolTests(APITestCase):
 
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-
-    # def test_school_report_update_with_auth(self):
-    #     self.api_authenticate()
-    #     school = self.create_school_with_current_user()
-    #     report = Report.objects.create(
-    #         school=school,
-    #         student_count=45,
-    #         for_date=(date(2020, 1, 10)),
-    #         added_by_school=True
-    #     )
-    #     items = ['idly', 'dosa', 'chutney']
-    #     report.items.bulk_create(
-    #         [ReportItem(report=report, item=item) for item in items])
-
-    #     data = {
-    #         'student_count': 45,
-    #         'for_date': '2020-01-10',
-    #     }
-
-    #     url = reverse('school_report_update',
-    #                   kwargs={"pk": report.pk})
-
-    #     response = self.client.put(url, data, format='json')
-    #     self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-    #     report = Report.objects.get(id=report.id)
-    #     report_serializer_data = SchoolReportCreateSerializer(report).data
-    #     response_data = json.loads(response.content)
-    #     self.assertEqual(response_data, report_serializer_data)
-
-    # def test_school_report_update_without_auth(self):
-    #     self.api_authenticate()
-    #     school = self.create_school_with_current_user()
-    #     report = Report.objects.create(
-    #         school=school,
-    #         student_count=45,
-    #         for_date=(date(2020, 1, 10)),
-    #     )
-    #     items = ['idly', 'dosa', 'chutney']
-    #     report.items.bulk_create(
-    #         [ReportItem(report=report, item=item) for item in items])
-
-    #     url = reverse('school_report_update',
-    #                   kwargs={"pk": report.pk})
-
-    #     self.client.credentials()
-
-    #     response = self.client.put(url)
-    #     self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
 class DistrictTests(APITestCase):
